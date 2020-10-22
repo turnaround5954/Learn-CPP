@@ -64,8 +64,7 @@ static bool unionChambers(Vector<Set<cell>> &chambers, const wall &w, int &dimen
         int index = getChamberIndex(c, dimension);
         chambers[index] = unioned;
     }
-    chambers[index1] = unioned;
-    chambers[index2] = unioned;
+
     return true;
 }
 
