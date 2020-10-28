@@ -74,6 +74,7 @@ static void buildGrammar(const string &filename, Map<string, Vector<string>> &gr
     infile.close();
 }
 
+/* In fact, this implementation does not fully utilize the power of stack.
 static void printRandomSentence(const Map<string, Vector<string>> &grammar) {
     // use stack
     Stack<string> nonterminals;
@@ -119,8 +120,50 @@ static void printRandomSentence(const Map<string, Vector<string>> &grammar) {
 
     cout << endl;
 }
+*/
 
-/*
+static void pushSentenceStack(const string &sentence, Stack<string> &chunks) {
+    // treat a sentense as a sequence of words, push from right to left.
+    string current = "";
+    for (int i = sentence.size() - 1; i >= 0; i--) {
+        if (sentence[i] == '>') {
+            if (current != "") {
+                reverse(current.begin(), current.end());
+                chunks.push(current);
+            }
+            current = '>';
+            continue;
+        }
+        if (sentence[i] == '<') {
+            current += '<';
+            reverse(current.begin(), current.end());
+            chunks.push(current);
+            current = "";
+            continue;
+        }
+        current += sentence[i];
+    }
+    // push remaining string
+    if (current != "") {
+        reverse(current.begin(), current.end());
+        chunks.push(current);
+    }
+}
+
+static void printSentenceStack(const Map<string, Vector<string>> &grammar) {
+    Stack<string> chunks;
+    pushSentenceStack("<start>", chunks);
+    while (!chunks.isEmpty()) {
+        string current = chunks.pop();
+        if (grammar.containsKey(current)) {
+            pushSentenceStack(randomElement(grammar.get(current)), chunks);
+        } else {
+            cout << current;
+        }
+    }
+    cout << endl;
+}
+
 int main() {
     while (true) {
         string filename = getFileName();
@@ -133,7 +176,8 @@ int main() {
 
         for (int i = 1; i <= 3; i++) {
             cout << i << ".) ";
-            printRandomSentence(grammar);
+            // printRandomSentence(grammar);
+            printSentenceStack(grammar);
             cout << endl;
         }
     }
@@ -141,4 +185,3 @@ int main() {
     cout << "Thanks for playing!" << endl;
     return 0;
 }
-*/
