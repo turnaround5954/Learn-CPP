@@ -289,7 +289,7 @@ static int humanAct(const Lexicon &english, const Lexicon &computed, const Map<s
 
 /**
  * Function: computerAct
- * ------------------
+ * ---------------------
  * The computer's turn.
  */
 static int computerAct(const Lexicon &computed, const Lexicon &humanFound) {
