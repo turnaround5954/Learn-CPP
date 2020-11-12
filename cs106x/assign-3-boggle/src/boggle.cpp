@@ -181,7 +181,7 @@ static void configureBoard(Grid<char> &grid) {
 /**
  *Function: precomputeHelper
  * -------------------------
- * Helper function for recurrsion.
+ * Helper function for recursion.
  */
 static void precomputeHelper(Grid<char> &grid, const Lexicon &english, Lexicon &found, string &word,
                              Map<string, Vector<GridLocation>> &pathDict, Vector<GridLocation> &path,
