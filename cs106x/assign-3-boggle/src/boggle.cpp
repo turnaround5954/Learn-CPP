@@ -309,7 +309,7 @@ static int computerAct(const Lexicon &computed, const Lexicon &humanFound) {
  * -----------------
  * Include the human's turn and the computer's turn.
  */
-static void runGame(const Lexicon &english, const Lexicon &computed, const Map<string, Vector<GridLocation>> pathDict) {
+static void runGame(const Lexicon &english, const Lexicon &computed, const Map<string, Vector<GridLocation>> &pathDict) {
     Lexicon humanFound;
     int humanScore = humanAct(english, computed, pathDict, humanFound);
     int computerScore = computerAct(computed, humanFound);
