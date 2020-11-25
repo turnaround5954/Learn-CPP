@@ -23,7 +23,6 @@ bool canAllPatientsBeSeenHelper(Vector<Doctor> &doctors,
     Patient patient = patients.pop_back();
 
     // explore
-    bool res = false;
     for (int i = 0; i < doctors.size(); i++) {
         if (doctors[i].hoursFree < patient.hoursNeeded) {
             continue;
@@ -42,7 +41,9 @@ bool canAllPatientsBeSeenHelper(Vector<Doctor> &doctors,
         }
 
         // explore
-        res |= canAllPatientsBeSeenHelper(doctors, patients, tmp, schedule);
+        if (canAllPatientsBeSeenHelper(doctors, patients, tmp, schedule)) {
+            return true;
+        }
 
         // unchoose
         doctors[i].hoursFree += patient.hoursNeeded;
@@ -52,7 +53,7 @@ bool canAllPatientsBeSeenHelper(Vector<Doctor> &doctors,
     // unchoose
     patients.push_back(patient);
 
-    return res;
+    return false;
 }
 
 /**
@@ -80,6 +81,77 @@ bool canAllPatientsBeSeen(const Vector<Doctor> &doctors,
 }
 
 /* * * * Disaster Planning * * * */
+bool canBeMadeDisasterReadyHelper(Map<string, Set<string>> &roadNetwork,
+                                  int numCities, Set<string> &chosen,
+                                  Set<string> &notReady,
+                                  Set<string> &locations) {
+    // base case
+    if (numCities <= 0) {
+        if (notReady.isEmpty()) {
+            locations.addAll(chosen);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    if (roadNetwork.isEmpty()) {
+        if (!notReady.isEmpty()) {
+            return false;
+        }
+        locations.addAll(chosen);
+        return true;
+    }
+
+    // choose
+    string city;
+    for (string candidate : notReady) {
+        if (roadNetwork.containsKey(candidate)) {
+            city = candidate;
+            break;
+        }
+    }
+
+    if (!notReady.contains(city)) {
+        return false;
+    }
+
+    Set<string> neighbors = roadNetwork[city];
+    chosen.add(city);
+    roadNetwork.remove(city);
+    Set<string> backtrace;
+
+    notReady.remove(city);
+    backtrace.add(city);
+
+    for (string neighbor : neighbors) {
+        if (notReady.contains(neighbor)) {
+            notReady.remove(neighbor);
+            backtrace.add(neighbor);
+        }
+    }
+
+    // explore with city chosen
+    if (canBeMadeDisasterReadyHelper(roadNetwork, numCities - 1, chosen,
+                                     notReady, locations)) {
+        return true;
+    }
+
+    // unchoose (without unchoosing roadNetwork.add(city, neighbors))
+    chosen.remove(city);
+    notReady.addAll(backtrace);
+
+    // explore with city unchosen
+    if (canBeMadeDisasterReadyHelper(roadNetwork, numCities, chosen, notReady,
+                                     locations)) {
+        return true;
+    }
+
+    // unchoose
+    roadNetwork.add(city, neighbors);
+
+    return false;
+}
 
 /**
  * Given a transportation grid for a country or region, along with the number of
@@ -101,8 +173,14 @@ bool canAllPatientsBeSeen(const Vector<Doctor> &doctors,
 bool canBeMadeDisasterReady(const Map<string, Set<string>> &roadNetwork,
                             int numCities, Set<string> &locations) {
     // [TODO: Delete these lines and implement this function!]
-    (void)(roadNetwork, numCities, locations);
-    return false;
+    // (void)(roadNetwork, numCities, locations);
+    Map<string, Set<string>> network = roadNetwork;
+    Set<string> citiesChosen, citiesNotReady;
+    for (string city : roadNetwork.keys()) {
+        citiesNotReady.add(city);
+    }
+    return canBeMadeDisasterReadyHelper(network, numCities, citiesChosen,
+                                        citiesNotReady, locations);
 }
 
 /* * * * Winning the Election * * * */
