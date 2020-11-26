@@ -81,6 +81,9 @@ bool canAllPatientsBeSeen(const Vector<Doctor> &doctors,
 }
 
 /* * * * Disaster Planning * * * */
+
+/*
+// Solution using mutable roadNetwork
 bool canBeMadeDisasterReadyHelper(Map<string, Set<string>> &roadNetwork,
                                   int numCities, Set<string> &chosen,
                                   Set<string> &notReady,
@@ -152,6 +155,74 @@ bool canBeMadeDisasterReadyHelper(Map<string, Set<string>> &roadNetwork,
 
     return false;
 }
+*/
+
+bool canBeMadeDisasterReadyHelper(const Map<string, Set<string>> &roadNetwork,
+                                  int numCities, Set<string> &chosen,
+                                  Map<string, bool> &notReady,
+                                  Set<string> &locations) {
+    // base case
+    if (numCities <= 0) {
+        if (notReady.isEmpty()) {
+            locations.addAll(chosen);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    if (notReady.isEmpty()) {
+        locations.addAll(chosen);
+        return true;
+    }
+
+    string city;
+    for (string candidate : notReady) {
+        if (notReady[candidate]) {
+            city = candidate;
+            break;
+        }
+    }
+    if (city.empty()) {
+        return false;
+    }
+
+    // choose
+    Set<string> neighbors = roadNetwork[city];
+    chosen.add(city);
+    Map<string, bool> backtrace;
+
+    notReady.remove(city);
+
+    for (string neighbor : neighbors) {
+        if (notReady.containsKey(neighbor)) {
+            backtrace.add(neighbor, notReady[neighbor]);
+            notReady.remove(neighbor);
+        }
+    }
+
+    // explore with city chosen
+    if (canBeMadeDisasterReadyHelper(roadNetwork, numCities - 1, chosen,
+                                     notReady, locations)) {
+        return true;
+    }
+
+    // unchoose (without unchoosing roadNetwork.add(city, neighbors))
+    chosen.remove(city);
+    notReady.addAll(backtrace);
+    notReady.add(city, false);
+
+    // explore with city unchosen
+    if (canBeMadeDisasterReadyHelper(roadNetwork, numCities, chosen, notReady,
+                                     locations)) {
+        return true;
+    }
+
+    // unchoose
+    notReady[city] = true;
+
+    return false;
+}
 
 /**
  * Given a transportation grid for a country or region, along with the number of
@@ -170,6 +241,9 @@ bool canBeMadeDisasterReadyHelper(Map<string, Set<string>> &roadNetwork,
  * solution exists.
  * @return Whether a solution exists.
  */
+
+/*
+// Solution using mutable roadNetwork
 bool canBeMadeDisasterReady(const Map<string, Set<string>> &roadNetwork,
                             int numCities, Set<string> &locations) {
     // [TODO: Delete these lines and implement this function!]
@@ -180,6 +254,22 @@ bool canBeMadeDisasterReady(const Map<string, Set<string>> &roadNetwork,
         citiesNotReady.add(city);
     }
     return canBeMadeDisasterReadyHelper(network, numCities, citiesChosen,
+                                        citiesNotReady, locations);
+}
+*/
+
+// Solution using auxiliary data structure Map<string, bool> citiesNotReady
+bool canBeMadeDisasterReady(const Map<string, Set<string>> &roadNetwork,
+                            int numCities, Set<string> &locations) {
+    // [TODO: Delete these lines and implement this function!]
+    // (void)(roadNetwork, numCities, locations);
+    Set<string> citiesChosen;
+    Map<string, bool> citiesNotReady;
+    for (string city : roadNetwork) {
+        citiesNotReady.add(city, true);
+    }
+
+    return canBeMadeDisasterReadyHelper(roadNetwork, numCities, citiesChosen,
                                         citiesNotReady, locations);
 }
 
