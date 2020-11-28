@@ -5,6 +5,7 @@
 
 #include "Disasters.h"
 #include "map.h"
+#include "sparsegrid.h"
 using namespace std;
 
 /* * * * Doctors Without Orders * * * */
@@ -287,26 +288,119 @@ bool canBeMadeDisasterReady(const Map<string, Set<string>> &roadNetwork,
  * @param minStateIndex the lowest index in the states Vector that should be
  * considered
  */
+
+/*
+// Solution without memoization
 MinInfo minPopularVoteToGetAtLeast(int electoralVotesNeeded,
                                    const Vector<State> &states,
                                    int minStateIndex) {
     // [TODO: Delete these lines and implement this function!]
-    (void)(electoralVotesNeeded);
-    (void)(states);
-    (void)(minStateIndex);
-    return {0, {}};
+    // (void)(electoralVotesNeeded);
+    // (void)(states);
+    // (void)(minStateIndex);
+    // return {0, {}};
+
+    // base case
+    if (electoralVotesNeeded <= 0) {
+        return {0, {}};
+    }
+
+    if (minStateIndex == states.size() - 1) {
+        if (states.back().electoralVotes < electoralVotesNeeded) {
+            return {INT_MAX, {}};
+        }
+        return {states.back().popularVotes / 2 + 1, {states.back()}};
+    }
+
+    // choose and explore
+    MinInfo resultChosen = minPopularVoteToGetAtLeast(
+        electoralVotesNeeded - states[minStateIndex].electoralVotes, states,
+        minStateIndex + 1);
+
+    if (resultChosen.popularVotesNeeded < INT_MAX) {
+        resultChosen.popularVotesNeeded +=
+            states[minStateIndex].popularVotes / 2 + 1;
+    }
+    resultChosen.statesUsed.add(states[minStateIndex]);
+
+    // unchoose
+    MinInfo resultUnChosen = minPopularVoteToGetAtLeast(
+        electoralVotesNeeded, states, minStateIndex + 1);
+
+    return resultChosen.popularVotesNeeded < resultUnChosen.popularVotesNeeded
+               ? resultChosen
+               : resultUnChosen;
+}
+*/
+
+// Solution with memoization
+MinInfo minPopularVoteToGetAtLeast(int electoralVotesNeeded,
+                                   const Vector<State> &states,
+                                   int minStateIndex,
+                                   SparseGrid<MinInfo> &cache) {
+    // base case
+    if (electoralVotesNeeded <= 0) {
+        return {0, {}};
+    }
+
+    // check cache
+    if (cache.isSet(minStateIndex, electoralVotesNeeded)) {
+        return cache[minStateIndex][electoralVotesNeeded];
+    }
+
+    if (minStateIndex == states.size() - 1) {
+        MinInfo result = {INT_MAX, {}};
+        if (states.back().electoralVotes >= electoralVotesNeeded) {
+            result.popularVotesNeeded = states.back().popularVotes / 2 + 1;
+            result.statesUsed.add(states.back());
+        }
+        cache[minStateIndex][electoralVotesNeeded] = result;
+        return result;
+    }
+
+    // choose and explore
+    MinInfo resultChosen = minPopularVoteToGetAtLeast(
+        electoralVotesNeeded - states[minStateIndex].electoralVotes, states,
+        minStateIndex + 1, cache);
+
+    if (resultChosen.popularVotesNeeded < INT_MAX) {
+        resultChosen.popularVotesNeeded +=
+            states[minStateIndex].popularVotes / 2 + 1;
+    }
+    resultChosen.statesUsed.add(states[minStateIndex]);
+
+    // unchoose
+    MinInfo resultUnChosen = minPopularVoteToGetAtLeast(
+        electoralVotesNeeded, states, minStateIndex + 1, cache);
+
+    if (resultChosen.popularVotesNeeded < resultUnChosen.popularVotesNeeded) {
+        cache[minStateIndex][electoralVotesNeeded] = resultChosen;
+        return resultChosen;
+    } else {
+        cache[minStateIndex][electoralVotesNeeded] = resultUnChosen;
+        return resultUnChosen;
+    }
 }
 
 /**
- * Given a list of all the states in an election, including their popular and
- * electoral vote totals, returns information about how few popular votes you'd
- * need to win in order to win the presidency.
+ * Given a list of all the states in an election, including their popular
+ * and electoral vote totals, returns information about how few popular
+ * votes you'd need to win in order to win the presidency.
  *
  * @param states All the states in the election (plus DC, if appropriate)
  * @return Information about how few votes you'd need to win the election.
  */
 MinInfo minPopularVoteToWin(const Vector<State> &states) {
     // [TODO: Delete these lines and implement this function!]
-    (void)(states);
-    return {0, {}};
+    // (void)(states);
+    // return {0, {}};
+
+    int electoralVotesNeeded = 0;
+    for (State state : states) {
+        electoralVotesNeeded += state.electoralVotes;
+    }
+    electoralVotesNeeded = electoralVotesNeeded / 2 + 1;
+    SparseGrid<MinInfo> cache(states.size(), electoralVotesNeeded + 1);
+    // return minPopularVoteToGetAtLeast(electoralVotesNeeded, states, 0);
+    return minPopularVoteToGetAtLeast(electoralVotesNeeded, states, 0, cache);
 }
