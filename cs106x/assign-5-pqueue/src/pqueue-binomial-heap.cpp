@@ -5,7 +5,7 @@ using namespace std;
 BinomialHeapPQueue::BinomialHeapPQueue() {}
 BinomialHeapPQueue::~BinomialHeapPQueue() {
     for (Node *tree : TreeVec) {
-        if (tree != NULL) {
+        if (tree != nullptr) {
             freeTree(tree);
         }
     }
@@ -22,12 +22,12 @@ void BinomialHeapPQueue::freeTree(Node *root) {
 int BinomialHeapPQueue::findMinIdx(const Vector<Node *> &vec) {
     int minIdx = 0;
     int startIdx = 0;
-    while (startIdx < vec.size() && vec[startIdx] == NULL) {
+    while (startIdx < vec.size() && vec[startIdx] == nullptr) {
         startIdx++;
     }
     minIdx = startIdx;
     for (int i = startIdx; i < vec.size(); i++) {
-        if (vec[i] != NULL && vec[i]->data < vec[minIdx]->data) {
+        if (vec[i] != nullptr && vec[i]->data < vec[minIdx]->data) {
             minIdx = i;
         }
     }
@@ -54,7 +54,7 @@ string BinomialHeapPQueue::extractMin() {
     string minVal = TreeVec[minIdx]->data;
     Vector<Node *> aux = TreeVec[minIdx]->children;
     delete TreeVec[minIdx];
-    TreeVec[minIdx] = NULL;
+    TreeVec[minIdx] = nullptr;
     mergeTreeVec(TreeVec, aux);
     logSize--;
     return minVal;
@@ -84,13 +84,13 @@ BinomialHeapPQueue *BinomialHeapPQueue::merge(BinomialHeapPQueue *one,
 void BinomialHeapPQueue::mergeTreeVec(Vector<Node *> &one,
                                       Vector<Node *> &two) {
     int size = max(one.size(), two.size());
-    Node *carry = NULL;
+    Node *carry = nullptr;
     while (one.size() < size) {
-        one.add(NULL);
+        one.add(nullptr);
     }
     for (int i = 0; i < size; i++) {
-        Node *aux = NULL;
-        if (i < two.size() && two[i] != NULL) {
+        Node *aux = nullptr;
+        if (i < two.size() && two[i] != nullptr) {
             aux = two[i];
         }
         if (mergeTree(one[i], aux)) {
@@ -98,21 +98,21 @@ void BinomialHeapPQueue::mergeTreeVec(Vector<Node *> &one,
         } else {
             if (mergeTree(one[i], carry)) {
                 carry = one[i];
-                one[i] = NULL;
+                one[i] = nullptr;
             } else {
-                carry = NULL;
+                carry = nullptr;
             }
         }
     }
 
-    if (carry != NULL) {
+    if (carry != nullptr) {
         one.add(carry);
     }
 }
 
 bool BinomialHeapPQueue::mergeTree(Node *&one, Node *two) {
-    if (one == NULL || two == NULL) {
-        one = (one == NULL) ? two : one;
+    if (one == nullptr || two == nullptr) {
+        one = (one == nullptr) ? two : one;
         return false;
     }
 
