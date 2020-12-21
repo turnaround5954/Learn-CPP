@@ -4,12 +4,13 @@
 // TODO: remove this comment header
 
 #include "encoding.h"
+#include "pqueue.h"
 using namespace std;
 // TODO: include any other headers you need
 
 Map<int, int> buildFrequencyTable(istream &input) {
     // TODO: implement this function
-    Map<int, int> freqTable; // this is just a placeholder so it will compile
+    Map<int, int> freqTable;
     char ch;
     while (input.get(ch)) {
         if (!freqTable.containsKey(ch)) {
@@ -19,19 +20,54 @@ Map<int, int> buildFrequencyTable(istream &input) {
         }
     }
     freqTable.put(PSEUDO_EOF, 1);
-    return freqTable; // this is just a placeholder so it will compile
+    return freqTable;
 }
 
 HuffmanNode *buildEncodingTree(const Map<int, int> &freqTable) {
     // TODO: implement this function
-    return NULL; // this is just a placeholder so it will compile
+    PriorityQueue<HuffmanNode *> *pq = new PriorityQueue<HuffmanNode *>();
+    for (int key : freqTable.keys()) {
+        int count = freqTable[key];
+        pq->add(new HuffmanNode(key, count, nullptr, nullptr), count);
+    }
+    while (pq->size() >= 2) {
+        HuffmanNode *zero = pq->dequeue();
+        HuffmanNode *one = pq->dequeue();
+        int priority = zero->count + one->count;
+        HuffmanNode *parent = new HuffmanNode(NOT_A_CHAR, priority, zero, one);
+        pq->enqueue(parent, priority);
+    }
+    return pq->dequeue();
+}
+
+void traversal(HuffmanNode *node, string &code, Map<int, string> &encMap) {
+    // base case
+    if (node == nullptr) {
+        return;
+    }
+
+    if (node->character != NOT_A_CHAR) {
+        string encoding = code;
+        encMap.put(node->character, encoding);
+    }
+
+    // choose zero
+    code.push_back('0');
+    traversal(node->zero, code, encMap);
+    code.pop_back();
+
+    // choose one
+    code.push_back('1');
+    traversal(node->one, code, encMap);
+    code.pop_back();
 }
 
 Map<int, string> buildEncodingMap(HuffmanNode *encodingTree) {
     // TODO: implement this function
-    Map<int, string>
-        encodingMap;    // this is just a placeholder so it will compile
-    return encodingMap; // this is just a placeholder so it will compile
+    Map<int, string> encodingMap;
+    string code = "";
+    traversal(encodingTree, code, encodingMap);
+    return encodingMap;
 }
 
 void encodeData(istream &input, const Map<int, string> &encodingMap,
