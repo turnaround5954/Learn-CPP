@@ -179,8 +179,8 @@ bool SSModel::detectCircleHelper(const string &cellname, const string &other,
 }
 
 void SSModel::updateSubGraph(const string &cellname) {
-    if (!lookup.containsKey(cellname))
-        return;
+    //    if (!lookup.containsKey(cellname))
+    //        return;
 
     // implement topological sort (using reverse dfs order)
     Stack<string> stack;
@@ -205,12 +205,10 @@ void SSModel::updateSubGraph(const string &cellname) {
 void SSModel::updateSubGraphHelper(const string &cellname, Set<string> &visited,
                                    Stack<string> &stack) {
     visited.add(cellname);
-    if (lookup.containsKey(cellname)) {
-        for (string other : lookup[cellname]->out) {
-            if (visited.contains(other))
-                continue;
-            updateSubGraphHelper(other, visited, stack);
-        }
+    for (string other : lookup[cellname]->out) {
+        if (visited.contains(other))
+            continue;
+        updateSubGraphHelper(other, visited, stack);
     }
 
     stack.push(cellname);
