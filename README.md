@@ -2,6 +2,6 @@
 
 I'm Learning C++!
 ***
-Working in progress:
-1. CS106X
-2. CS106L
+
+1. CS106X -- Done
+2. CS106L -- May or may not to be done
