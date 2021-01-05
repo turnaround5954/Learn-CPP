@@ -13,10 +13,8 @@
 #include <string>
 using namespace std;
 
-static Expression *readE(TokenScanner &scanner, SSModel &context,
-                         Vector<Expression *> &track, int prec = 0);
-static Expression *readT(TokenScanner &scanner, SSModel &context,
-                         Vector<Expression *> &track);
+static Expression *readE(TokenScanner &scanner, SSModel &context, int prec = 0);
+static Expression *readT(TokenScanner &scanner, SSModel &context);
 static int precedence(const string &token);
 static Expression *readRangeExp(TokenScanner &scanner, const string &token,
                                 SSModel &context);
@@ -28,21 +26,12 @@ static Expression *readRangeExp(TokenScanner &scanner, const string &token,
  */
 
 Expression *parseExp(TokenScanner &scanner, SSModel &context) {
-    Vector<Expression *> track;
-    try {
-        Expression *exp = readE(scanner, context, track);
-        if (scanner.hasMoreTokens()) {
-            error("Unexpected token \"" + scanner.nextToken() + "\"");
-        }
-        return exp;
-    } catch (ErrorException ex) {
-        cout << ex.getMessage() << endl;
-        for (Expression *e : track) {
-            delete e;
-            e = nullptr;
-        }
-        error("Error while parsing expression.");
+    Expression *exp = readE(scanner, context);
+    if (scanner.hasMoreTokens()) {
+        delete exp; // prevent memory leakage
+        error("Unexpected token \"" + scanner.nextToken() + "\"");
     }
+    return exp;
 }
 
 /**
@@ -56,18 +45,16 @@ Expression *parseExp(TokenScanner &scanner, SSModel &context) {
  * recursively to read that subexpression as a unit.
  */
 
-Expression *readE(TokenScanner &scanner, SSModel &context,
-                  Vector<Expression *> &track, int prec) {
-    Expression *exp = readT(scanner, context, track);
+Expression *readE(TokenScanner &scanner, SSModel &context, int prec) {
+    Expression *exp = readT(scanner, context);
     string token;
     while (true) {
         token = scanner.nextToken();
         int tprec = precedence(token);
         if (tprec <= prec)
             break;
-        Expression *rhs = readE(scanner, context, track, tprec);
+        Expression *rhs = readE(scanner, context, tprec);
         exp = new CompoundExp(token, exp, rhs);
-        track.add(exp);
     }
     scanner.saveToken(token);
     return exp;
@@ -79,38 +66,27 @@ Expression *readE(TokenScanner &scanner, SSModel &context,
  * This function scans a term, which is either an integer, an identifier,
  * or a parenthesized subexpression.
  */
-Expression *readT(TokenScanner &scanner, SSModel &context,
-                  Vector<Expression *> &track) {
+Expression *readT(TokenScanner &scanner, SSModel &context) {
     string token = scanner.nextToken();
     TokenScanner::TokenType type = scanner.getTokenType(token);
-
-    Expression *tracked = nullptr;
-
     if (type == TokenScanner::WORD) {
         // identifier expression
-        if (context.nameIsValid(token)) {
-            tracked = new IdentifierExp(token);
-        } else {
-            // range function expression
-            tracked = readRangeExp(scanner, token, context);
-        }
-        track.add(tracked);
-        return tracked;
+        if (context.nameIsValid(token))
+            return new IdentifierExp(token);
+        // range function expression
+        return readRangeExp(scanner, token, context);
+        // other cases
+        error("Unexpected token \"" + token + "\"");
     }
-    if (type == TokenScanner::NUMBER) {
-        tracked = new DoubleExp(stringToReal(token));
-        track.add(tracked);
-        return tracked;
-    }
-    if (type == TokenScanner::STRING) {
-        tracked = new TextStringExp(token.substr(1, token.length() - 2));
-        track.add(tracked);
-        return tracked;
-    }
+    if (type == TokenScanner::NUMBER)
+        return new DoubleExp(stringToReal(token));
+    if (type == TokenScanner::STRING)
+        return new TextStringExp(token.substr(1, token.length() - 2));
     if (token != "(")
         error("Unexpected token \"" + token + "\"");
-    Expression *exp = readE(scanner, context, track, 0);
+    Expression *exp = readE(scanner, context, 0);
     if (scanner.nextToken() != ")") {
+        delete exp; // prevent memory leakage
         error("Unbalanced parentheses");
     }
     return exp;
