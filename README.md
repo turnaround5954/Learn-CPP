@@ -4,4 +4,4 @@ I'm Learning C++!
 ***
 
 1. CS106X -- Done
-2. CS106L
+2. CS106L -- Done
